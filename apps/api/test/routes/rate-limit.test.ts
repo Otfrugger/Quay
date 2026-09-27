@@ -216,7 +216,7 @@ describe("index.ts route wiring", () => {
 
   it("mounts the /auth limiter before the /auth route", () => {
     const limiter = source.indexOf('app.use("/auth", strictRateLimit)');
-    const route = source.indexOf('app.route(\n    "/auth"');
+    const route = source.search(/app\.route\(\s*["']\/auth["']/);
     expect(limiter).toBeGreaterThan(-1);
     expect(route).toBeGreaterThan(-1);
     expect(limiter).toBeLessThan(route);

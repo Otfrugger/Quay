@@ -881,6 +881,15 @@ function percentile(sortedAsc: number[], p: number): number | null {
 export class DrizzleOfframpTelemetryRepository implements OffRampTelemetryRepository {
   constructor(private readonly db: DB) {}
 
+  async get(id: string): Promise<OffRampTelemetryRow | null> {
+    const rows = await this.db
+      .select()
+      .from(offrampTelemetry)
+      .where(eq(offrampTelemetry.id, id))
+      .limit(1);
+    return rows[0] ? rowToTelemetry(rows[0]) : null;
+  }
+
   async upsert(row: OffRampTelemetryRow): Promise<void> {
     const dbRow: typeof offrampTelemetry.$inferInsert = {
       id: row.id,

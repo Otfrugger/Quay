@@ -327,6 +327,7 @@ export interface OffRampTelemetrySummary {
 }
 
 export interface OffRampTelemetryRepository {
+  get(id: string): Promise<OffRampTelemetryRow | null>;
   upsert(row: OffRampTelemetryRow): Promise<void>;
   summary(): Promise<OffRampTelemetrySummary[]>;
   /** Anonymised dump — seller/link identities excluded — for CSV export. */
