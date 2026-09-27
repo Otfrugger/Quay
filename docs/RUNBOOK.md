@@ -458,6 +458,39 @@ typical settlement time.
    reality. `offramp_failed` can transition back to `offramp_pending` to
    retry.
 
+## Reconciliation report (withdrawals vs seller transfers vs anchor payouts)
+
+The reconciliation report verifies the end-to-end accounting of off-ramp cash-outs:
+1. **Withdrawal requests**: Initiated via Quay (`offramp_jobs` and link state).
+2. **Seller on-chain transfers**: On-chain payment sent by seller to the anchor (`seller_tx_hash`).
+3. **Anchor payouts**: Settlements acknowledged and executed by the anchor (`stellar_transaction_id`, `amount_in`, `amount_fee`, `target_amount` / `amount_out`).
+
+### Running the reconciliation report
+
+Run via the API package:
+```bash
+# Formatted text report (standard console output)
+pnpm reconcile
+
+# Output as CSV for spreadsheet analysis
+pnpm reconcile --csv > reconciliation.csv
+
+# Output as JSON
+pnpm reconcile --json
+
+# Filter by seller or reconciliation status
+pnpm reconcile --seller=<seller_id>
+pnpm reconcile --status=transfer_mismatch
+```
+
+### Reconciliation statuses
+
+- `matched`: Seller on-chain transfer and anchor execution details match in full (`seller_tx_hash` matches `stellar_transaction_id`, amounts align, and payout succeeded).
+- `pending`: Cash-out is in progress or waiting on anchor processing.
+- `no_transfer`: Seller triggered cash-out but has not yet completed the on-chain transfer to the anchor (or job settled with missing transfer metadata).
+- `transfer_mismatch`: The on-chain transaction hash submitted by the seller does not match the anchor's recorded `stellar_transaction_id`, or `amount_in` does not match the link payment amount.
+- `payout_short`: The anchor settled the withdrawal, but the net payout amount (`amount_out`) was less than the expected net target amount.
+
 ## Incident template
 
 Copy this into a new incident doc/issue when something goes wrong:

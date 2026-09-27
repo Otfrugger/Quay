@@ -265,7 +265,10 @@ export async function resolveWithdrawType(
 export interface Sep6TransactionResult {
   id: string;
   status: string;
+  amountIn?: string;
   amountOut?: string;
+  amountFee?: string;
+  stellarTransactionId?: string;
   message?: string;
 }
 
@@ -334,12 +337,23 @@ export async function getSep6Transaction(
     throw new Error(`SEP-6 transaction fetch failed: ${res.status} ${await res.text()}`);
   }
   const body = (await res.json()) as {
-    transaction: { id: string; status: string; amount_out?: string; message?: string };
+    transaction: {
+      id: string;
+      status: string;
+      amount_in?: string;
+      amount_out?: string;
+      amount_fee?: string;
+      stellar_transaction_id?: string;
+      message?: string;
+    };
   };
   const out: Sep6TransactionResult = {
     id: body.transaction.id,
     status: body.transaction.status,
+    amountIn: body.transaction.amount_in,
     amountOut: body.transaction.amount_out,
+    amountFee: body.transaction.amount_fee,
+    stellarTransactionId: body.transaction.stellar_transaction_id,
     message: body.transaction.message,
   };
   log.info(

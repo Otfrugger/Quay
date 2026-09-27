@@ -87,6 +87,7 @@ const BOOTSTRAP_SQL = [
      job_id TEXT PRIMARY KEY, link_id TEXT NOT NULL, anchor TEXT NOT NULL,
      target_currency TEXT NOT NULL, target_amount TEXT NOT NULL, rate TEXT NOT NULL,
      status TEXT NOT NULL, external_status TEXT, last_error TEXT,
+     seller_tx_hash TEXT, amount_in TEXT, amount_fee TEXT, stellar_transaction_id TEXT,
      created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL
    )`,
   `CREATE TABLE IF NOT EXISTS seller_kyc (
@@ -167,6 +168,10 @@ const ADDITIVE_MIGRATIONS = [
   //      last 4 chars in every API response and never logged or webhook'd.
   `ALTER TABLE sellers ADD COLUMN payout_fields_json TEXT`,
   `ALTER TABLE link_payments ADD COLUMN ledger INTEGER`,
+  `ALTER TABLE offramp_jobs ADD COLUMN seller_tx_hash TEXT`,
+  `ALTER TABLE offramp_jobs ADD COLUMN amount_in TEXT`,
+  `ALTER TABLE offramp_jobs ADD COLUMN amount_fee TEXT`,
+  `ALTER TABLE offramp_jobs ADD COLUMN stellar_transaction_id TEXT`,
   // BUG-4.21: a `sellers` table created before `wallet` gained UNIQUE still has
   // a plain `wallet TEXT NOT NULL`, and CREATE TABLE IF NOT EXISTS never
   // upgrades an existing table. `createIfAbsent` uses ON CONFLICT (wallet),

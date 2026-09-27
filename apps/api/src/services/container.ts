@@ -52,6 +52,7 @@ export interface Container {
   apiKeys: DrizzleApiKeyRepository;
   db: DB;
   kyc: KycPort;
+  offrampState?: DrizzleOffRampStateRepository;
   telemetry: OffRampTelemetryRepository;
   config: { network: string; horizonUrl: string; sellerWallet: string | null };
   horizonStatus(): HorizonStatus;
@@ -236,6 +237,7 @@ export async function createContainer(): Promise<Container> {
     apiKeys: apiKeysRepo,
     db,
     kyc,
+    offrampState: offrampStateRepo,
     telemetry: telemetryRepo,
     config: { network: stellar.network, horizonUrl: stellar.horizonUrl, sellerWallet },
     horizonStatus: () => pollingWatcher.getStatus(),

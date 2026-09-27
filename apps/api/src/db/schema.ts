@@ -152,6 +152,10 @@ export const offrampJobs = sqliteTable("offramp_jobs", {
   status: text("status").notNull(),
   externalStatus: text("external_status"),
   lastError: text("last_error"),
+  sellerTxHash: text("seller_tx_hash"),
+  amountIn: text("amount_in"),
+  amountFee: text("amount_fee"),
+  stellarTransactionId: text("stellar_transaction_id"),
   createdAt: integer("created_at").notNull(),
   updatedAt: integer("updated_at").notNull(),
 });

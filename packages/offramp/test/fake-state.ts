@@ -26,9 +26,20 @@ export class FakeOffRampStateRepository implements OffRampStateRepository {
     return this.jobs.get(jobId) ?? null;
   }
 
+  async getJobByLinkId(linkId: string): Promise<StoredOffRampJob | null> {
+    for (const job of this.jobs.values()) {
+      if (job.linkId === linkId) return job;
+    }
+    return null;
+  }
+
+  async listJobs(): Promise<StoredOffRampJob[]> {
+    return [...this.jobs.values()];
+  }
+
   async updateJob(
     jobId: string,
-    patch: Partial<Pick<StoredOffRampJob, "targetAmount" | "status" | "externalStatus" | "lastError">>,
+    patch: Partial<Pick<StoredOffRampJob, "targetAmount" | "status" | "externalStatus" | "lastError" | "sellerTxHash" | "amountIn" | "amountFee" | "stellarTransactionId">>,
   ): Promise<void> {
     const job = this.jobs.get(jobId);
     if (!job) return;

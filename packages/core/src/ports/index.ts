@@ -267,6 +267,10 @@ export interface StoredOffRampJob {
   status: OffRampJobStatus;
   externalStatus: string | null; // raw upstream status string, for debugging
   lastError: string | null;
+  sellerTxHash?: string | null;
+  amountIn?: string | null;
+  amountFee?: string | null;
+  stellarTransactionId?: string | null;
   createdAt: number;
   updatedAt: number;
 }
@@ -276,9 +280,11 @@ export interface OffRampStateRepository {
   getQuote(quoteId: string): Promise<StoredOffRampQuote | null>;
   saveJob(job: StoredOffRampJob): Promise<void>;
   getJob(jobId: string): Promise<StoredOffRampJob | null>;
+  getJobByLinkId?(linkId: string): Promise<StoredOffRampJob | null>;
+  listJobs?(): Promise<StoredOffRampJob[]>;
   updateJob(
     jobId: string,
-    patch: Partial<Pick<StoredOffRampJob, "targetAmount" | "status" | "externalStatus" | "lastError">>,
+    patch: Partial<Pick<StoredOffRampJob, "targetAmount" | "status" | "externalStatus" | "lastError" | "sellerTxHash" | "amountIn" | "amountFee" | "stellarTransactionId">>,
   ): Promise<void>;
 }
 

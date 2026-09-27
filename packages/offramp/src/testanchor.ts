@@ -346,6 +346,9 @@ export class TestAnchorOffRamp implements OffRampPort {
     const tx = await getSep6Transaction((await this.discover()).transferServer, jwt, jobId, baseLog);
     const status = mapSep6Status(tx.status);
     const targetAmount = tx.amountOut ?? job.targetAmount;
+    const amountIn = tx.amountIn ?? job.amountIn ?? null;
+    const amountFee = tx.amountFee ?? job.amountFee ?? null;
+    const stellarTransactionId = tx.stellarTransactionId ?? job.stellarTransactionId ?? null;
     const reason = status === "failed" ? (tx.message ?? `${this.anchorName}: withdrawal failed`) : null;
 
     await this.state.updateJob(jobId, {
@@ -353,6 +356,9 @@ export class TestAnchorOffRamp implements OffRampPort {
       status,
       externalStatus: tx.status,
       lastError: reason,
+      amountIn: amountIn ?? undefined,
+      amountFee: amountFee ?? undefined,
+      stellarTransactionId: stellarTransactionId ?? undefined,
     });
 
     return {

@@ -224,6 +224,7 @@ export interface TestContainer extends Container {
   sellers: DrizzleSellerRepository;
   webhooks: DrizzleWebhookRepository;
   state: DrizzleWatcherStateRepository;
+  offrampState: DrizzleOffRampStateRepository;
   rail: FakeRailPort;
   watcher: FakeWatcherPort;
   offramp: FakeOffRampPort;
@@ -280,6 +281,7 @@ export async function createTestContainer(): Promise<TestContainer> {
     db: repos.db,
     client: repos.client,
     kyc: new NoKycRequired() as unknown as Container["kyc"],
+    offrampState,
     telemetry,
     auth: { session, revocations, stellarToml: {}, challenge: {}, secureCookie: false } as unknown as Container["auth"],
     horizonStatus: () => ({ degraded: false, usingFallback: false, consecutiveFailures: 0 }),

@@ -427,6 +427,12 @@ export const api = {
       { method: "POST", body: JSON.stringify({ targetCurrency, payoutFields }), idempotencyKey },
     ),
 
+  recordTransferSent: (id: string, txHash: string) =>
+    http<{ ok: boolean; jobId: string; txHash: string }>(`/links/${id}/cash-out/transfer-sent`, {
+      method: "POST",
+      body: JSON.stringify({ txHash }),
+    }),
+
   exportCsv: (from?: string, to?: string): Promise<Blob> => {
     const params = new URLSearchParams();
     if (from) params.set("from", from);

@@ -737,6 +737,10 @@ function rowToJob(row: OffRampJobRow): StoredOffRampJob {
     status: row.status as StoredOffRampJob["status"],
     externalStatus: row.externalStatus ?? null,
     lastError: row.lastError ?? null,
+    sellerTxHash: row.sellerTxHash ?? null,
+    amountIn: row.amountIn ?? null,
+    amountFee: row.amountFee ?? null,
+    stellarTransactionId: row.stellarTransactionId ?? null,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
@@ -776,6 +780,10 @@ export class DrizzleOffRampStateRepository implements OffRampStateRepository {
       status: job.status,
       externalStatus: job.externalStatus,
       lastError: job.lastError,
+      sellerTxHash: job.sellerTxHash ?? null,
+      amountIn: job.amountIn ?? null,
+      amountFee: job.amountFee ?? null,
+      stellarTransactionId: job.stellarTransactionId ?? null,
       createdAt: job.createdAt,
       updatedAt: job.updatedAt,
     });
@@ -786,9 +794,19 @@ export class DrizzleOffRampStateRepository implements OffRampStateRepository {
     return rows[0] ? rowToJob(rows[0]) : null;
   }
 
+  async getJobByLinkId(linkId: string): Promise<StoredOffRampJob | null> {
+    const rows = await this.db.select().from(offrampJobs).where(eq(offrampJobs.linkId, linkId)).limit(1);
+    return rows[0] ? rowToJob(rows[0]) : null;
+  }
+
+  async listJobs(): Promise<StoredOffRampJob[]> {
+    const rows = await this.db.select().from(offrampJobs).orderBy(desc(offrampJobs.createdAt));
+    return rows.map(rowToJob);
+  }
+
   async updateJob(
     jobId: string,
-    patch: Partial<Pick<StoredOffRampJob, "targetAmount" | "status" | "externalStatus" | "lastError">>,
+    patch: Partial<Pick<StoredOffRampJob, "targetAmount" | "status" | "externalStatus" | "lastError" | "sellerTxHash" | "amountIn" | "amountFee" | "stellarTransactionId">>,
   ): Promise<void> {
     await this.db
       .update(offrampJobs)
