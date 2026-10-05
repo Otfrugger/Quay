@@ -401,6 +401,11 @@ export class ScriptedKyc implements KycPort {
 export class FakeTelemetryRepository implements OffRampTelemetryRepository {
   readonly rows: OffRampTelemetryRow[] = [];
 
+  async get(id: string): Promise<OffRampTelemetryRow | null> {
+    const found = this.rows.find((r) => r.id === id);
+    return found ? { ...found } : null;
+  }
+
   async upsert(row: OffRampTelemetryRow): Promise<void> {
     const existing = this.rows.findIndex((r) => r.id === row.id);
     if (existing === -1) this.rows.push({ ...row });
