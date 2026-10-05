@@ -1311,8 +1311,7 @@ export class LinkService {
         // Awaited (errors are swallowed inside recordTelemetry) rather than
         // fire-and-forget, so a slow store can't race past the write.
         {
-          const existingRows = await this.deps.telemetry.all().catch(() => []);
-          const existing = existingRows.find((r) => r.id === `tel_${link.offrampJobId}`);
+          const existing = await this.deps.telemetry.get(`tel_${link.offrampJobId}`).catch(() => null);
           const quotedRate = existing?.quotedRate ?? job.rate;
           const sourceAmount = link.paidAmount ?? link.amount;
           // Both rates are TARGET per source (issue 5.21): quote.rate is
@@ -1386,7 +1385,7 @@ export class LinkService {
   ): Promise<void> {
     try {
       const id = `tel_${jobId}`;
-      const existing = (await this.deps.telemetry.all()).find((r) => r.id === id);
+      const existing = await this.deps.telemetry.get(id);
       const base: OffRampTelemetryRow = existing ?? {
         id,
         anchorDomain: "unknown",

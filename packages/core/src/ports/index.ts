@@ -544,6 +544,8 @@ export interface OffRampTelemetrySummary {
 }
 
 export interface OffRampTelemetryRepository {
+  /** Point lookup by row id (`tel_<jobId>`); null when absent. */
+  get(id: string): Promise<OffRampTelemetryRow | null>;
   upsert(row: OffRampTelemetryRow): Promise<void>;
   summary(): Promise<OffRampTelemetrySummary[]>;
   /** Anonymised dump — seller/link identities excluded — for CSV export. */
