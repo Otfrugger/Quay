@@ -475,6 +475,21 @@ mean a checkout page that could never actually be paid — see
 
 ---
 
+## `GET /links/export/csv`
+
+**Requires auth.** Requires `links:read` scope. Exports reconciliation CSV of the authenticated seller's own links.
+
+**Query parameters:**
+- `from` (*optional*): ISO timestamp or `YYYY-MM-DD` date. Links created at or after this time (`createdAt >= from`) are included. If date-only, defaults to `00:00:00.000Z` of that day.
+- `to` (*optional*): ISO timestamp or `YYYY-MM-DD` date. Links created at or before this time are included. When given as a date-only (`YYYY-MM-DD`), the filter is inclusive of the entire UTC day (through `23:59:59.999Z`). When given as a full ISO timestamp, exact comparison (`createdAt <= to`) is preserved.
+
+If `from` or `to` cannot be parsed, returns **400** `{ "error": "invalid_query", "message": "unparsable <from|to> date" }`.
+
+**200** `text/csv; charset=utf-8`
+Content-Disposition: `attachment; filename="quay-links-export.csv"`
+
+---
+
 ## `GET /links/:id`
 
 **Public — no auth.** Fetch one link plus its payment request (used by the
@@ -862,6 +877,14 @@ Submit or update identity fields. Values are sent to the anchor **exactly as
 given** — no field is ever defaulted or fabricated. Call with `{}` to kick off
 discovery before any fields are known.
 
+On a seller's first submission (when the anchor has not yet revealed its requirements
+and `requiredFields` is empty), no profile fields are transmitted to the anchor without
+prior active consent. Calling with `{}` (or providing fields without prior consent)
+performs discovery: no profile fields are sent, and the response returns the anchor's
+discovered `requiredFields` so the seller can review and consent via `POST /seller/kyc/consent`
+before submitting. If active consent already exists covering specific fields, only those
+consented fields are transmitted.
+
 **Request**
 ```json
 { "first_name": "Ada", "email_address": "ada@example.org" }
@@ -984,6 +1007,14 @@ Submit or update identity fields. **Before any field is sent to the anchor, the
 server checks that every field about to be sent is covered by an active consent
 for that anchor.** If any field lacks consent, the request is rejected with
 `403 consent_required`.
+
+**First-submission behavior:** When an anchor's required fields are not yet known
+(`requiredFields` is empty), fields provided in the request body are not forwarded to
+the anchor unless active consent covers them. Without active consent, the call acts
+as discovery (identical to `PUT {}`), sending no profile fields and returning the
+anchor's requirements without leaking unconsented data. Once requirements are discovered
+and consent is granted via `POST /seller/kyc/consent`, subsequent submissions enforce
+consent against all required fields.
 
 **403**
 ```json
@@ -1356,10 +1387,12 @@ merchant's webhook is reported as **404**, the same as one that does not exist.
 
 | Entry status | Effect                                          |
 | ------------ | ----------------------------------------------- |
-| `dead`       | Re-queued as `pending`, `nextAttemptAt = now`.  |
-| `pending`    | `nextAttemptAt` reset to now (accelerates next attempt). |
-| `delivered`  | Re-queued as `pending` (re-sends an already-delivered event). |
+| `dead`       | Re-queued as `pending`, fresh attempt budget (`attempts = 0`), `nextAttemptAt = now`. |
+| `pending`    | `nextAttemptAt` reset to now (accelerates next attempt; keeps stored attempt count). |
+| `delivered`  | Re-queued as `pending`, fresh attempt budget (`attempts = 0`) (re-sends an already-delivered event). |
 | `claimed`    | **409** — delivery is in-flight; wait for it to settle. |
+
+Replay restarts the retry budget for `dead` or `delivered` entries. In `webhook_deliveries`, `attempt` starts again at 1 for the replayed run (all delivery attempts remain grouped by `queue_entry_id` and ordered by `createdAt`).
 
 **202**
 ```json
@@ -1491,7 +1524,7 @@ For seller-level KYC events, `id` is the seller ID and the payload contains **no
   (`attempt` column + `queue_entry_id`), so you can inspect exactly which
   attempts failed and why.
 - **Transient failures** (network errors, `5xx`, `429`) are retried.
-- **Permanent failures** (`4xx` except `429`) are dead-lettered immediately.
+- **Permanent failures** (`4xx` except `429`, or an unreadable secret) are dead-lettered immediately; an unreadable secret can be fixed by rotating the secret and replaying.
 - **Dead letters** are replayable via `POST /webhooks/deliveries/:id/replay`.
 
 Return `2xx` quickly to acknowledge receipt. Long-running processing should be
